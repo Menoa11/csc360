@@ -1,0 +1,15 @@
+# Ignore object files
+*.o
+*.txt
+
+# Ignore compiled executables
+inf
+args
+sample
+
+# Ignore other temporary files 
+*.out
+*.log
+
+# Make sure to not include the executable
+ssi
