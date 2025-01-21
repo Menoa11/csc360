@@ -1,0 +1,68 @@
+Design Document
+
+1. How many threads are you going to use? Specify the work that you intend each thread to perform.
+
+I will use one thread for each train. Each thread will simulate the behavior of a train: loading, waiting for clearance to cross the main track, and crossing 
+the main track. After crossing, the thread will terminate. There will also be a main thread responsible for initializing and managing the other threads
+
+
+2. Do the threads work independently? Or, is there an overall “controller” thread?
+
+The train threads work independently in the sense that they each simulate a train, but the main thread acts as a controller, managing the initialization of 
+the train threads and ensuring that scheduling rules are followed using mutexes and condition variables.
+
+
+3. How many mutexes are you going to use? Specify the operation that each mutex will guard.
+
+I will use one mutex to guard access to the main track (i.e., controlling which train can cross at a given time). This mutex will ensure that only 
+one train is on the track at any time. I will also use another mutex to protect shared data structures like the queues holding trains waiting to 
+cross, preventing concurrent modification.
+
+
+4. Will the main thread be idle? If not, what will it be doing?
+
+The main thread will not be idle. It will initialize train threads, handle synchronization, enforce the scheduling rules, and ensure that the simulation
+progresses according to the specified rules (e.g., checking the queue of loaded trains and deciding which train gets access to the track next).
+
+
+5. How are you going to represent stations (which are collections of loaded trains ready to depart)? That is, what type of data structure will you use?
+
+I will use two separate queues (or priority queues) to represent the trains waiting at each station, one for Eastbound and one for Westbound trains. 
+Each queue will store trains based on their loading completion time, allowing for easy scheduling of the first train to cross
+
+
+6. How are you going to ensure that data structures in your program will not be modified concurrently?
+
+Mutexes will be used to protect access to shared data structures such as the queues of waiting trains. Any modification to these 
+queues such as adding or removing trains, will require acquiring the appropriate mutex to prevent concurrent access and ensure data integrity.
+
+
+7. How many convars are you going to use? For each convar:
+
+Describe the condition that the convar will represent.
+
+I will use two condition variables: one for trains waiting to cross Eastbound and another for trains waiting to cross Westbound. These will
+signal when a train can proceed to cross the track based on priority and scheduling rules.
+
+Which mutex is associated with the convar? Why?
+
+Both condition variables will be associated with the main track mutex, as this ensures that only one train can cross the track at a time. 
+This mutex will prevent other threads from modifying the state of the track while a train is crossing.
+
+What operation should be performed once pthread_cond_wait() has been unblocked and re-acquired the mutex?
+
+Once unblocked, the train thread should proceed to cross the track, print its status, and then signal the next waiting train using 
+the appropriate condition variable before releasing the mutex and terminating.
+
+“The number of convars may not be enough. Each train might need a local convar. You need to make sure that the specific train thread will be signaled to start crossing.”
+
+
+8. In 15 lines or less, briefly sketch the overall algorithm you will use. 
+
+(1) Read input file, parse train data, and initialize train threads.
+(2) For each train, after loading is complete, acquire the station mutex.
+(3) Insert the train into the appropriate station’s queue and release the mutex.
+(4) Main thread checks which trains are ready to cross based on priority and scheduling rules.
+(5) If a train is allowed to cross, acquire the main track mutex.
+(6) Remove the train from the station’s queue, signal the train thread to proceed, and release the main track mutex.
+(7) Train crosses the track, prints its status, and finally terminates.

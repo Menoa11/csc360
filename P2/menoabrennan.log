@@ -1,0 +1,365 @@
+2024/11/13 18:33:31 [testMake] Testing Makefile exists and can compile mts, 1.00
+2024/11/13 18:33:31 [COMMAND]: /usr/bin/make -C submissions/menoabrennan/p2 clean
+2024/11/13 18:33:31 make: Entering directory '/home/clarkzjw/CSC360/marking/p2/marking/submissions/menoabrennan/p2'
+rm -f mts
+make: Leaving directory '/home/clarkzjw/CSC360/marking/p2/marking/submissions/menoabrennan/p2'
+2024/11/13 18:33:31 [COMMAND]: /usr/bin/make -C submissions/menoabrennan/p2
+2024/11/13 18:33:32 make: Entering directory '/home/clarkzjw/CSC360/marking/p2/marking/submissions/menoabrennan/p2'
+gcc -Wall -pthread -o mts mts.c
+make: Leaving directory '/home/clarkzjw/CSC360/marking/p2/marking/submissions/menoabrennan/p2'
+2024/11/13 18:33:32 ==== Test name: testMake, Mark received: 1.00 ====
+
+2024/11/13 18:33:33 [testREADME] Testing README file exists, 1.00
+2024/11/13 18:33:33 [testREADME] README content: 
+Your submission contains a README.md (or README.txt) file that describes whether you have implemented mts correctly. (Complete)
+
+Your submission can be successfully compiled by make without warnings or errors. The produced executable is named as mts. (Complete)
+
+Your mts can be executed with one command line parameter, i.e., the path to the input file. E.g., ./mts input.txt. (Complete)
+
+Your mts saves the simulation output to output.txt following the format defined in Section 3.3. If mts is invoked multiple times on different input files, you should overwrite output.txt with the results from the latest run. (Complete)
+
+Your mts has no deadlocks, and the simulation can complete within 1 minute using an input file that satisfies this condition. (Complete)
+
+
+All the custom test cases that I ran based ont he rules:
+1. Only one train is on the main track at any given time.
+2. Only loaded trains can cross the main track.
+3. If there are multiple loaded trains, the one with the high priority crosses.
+4. If two loaded trains have the same priority, then:
+
+a) If they are both traveling in the same direction, the train which finished loading first gets the clearance to cross first. If they finished loading at the same time, the one that appeared first in the input file gets the clearance to cross first.
+b) If they are traveling in opposite directions, pick the train which will travel in the direction opposite of which the last train to cross the main track traveled. If no trains have crossed the main track yet, the Westbound train has the priority.
+
+5. To avoid starvation, if there are two trains in the same direction traveling through the main track back to back, the trains waiting in the opposite direction get a chance to dispatch one train if any.
+
+Multiple loaded trains high priority goes first:
+
+e 1 10
+w 2 2 
+e 3 3
+E 4 4
+w 5 5
+
+00:00:00.1 Train  0 is ready to go East
+00:00:00.1 Train  0 is ON the main track going East
+00:00:00.2 Train  1 is ready to go West
+00:00:00.3 Train  2 is ready to go East
+00:00:00.4 Train  3 is ready to go East
+00:00:00.5 Train  4 is ready to go West
+00:00:01.1 Train  0 is OFF the main track after going East
+00:00:01.1 Train  3 is ON the main track going East
+00:00:01.5 Train  3 is OFF the main track after going East
+00:00:01.5 Train  1 is ON the main track going West
+00:00:01.7 Train  1 is OFF the main track after going West
+00:00:01.7 Train  2 is ON the main track going East
+00:00:02.0 Train  2 is OFF the main track after going East
+00:00:02.0 Train  4 is ON the main track going West
+00:00:02.5 Train  4 is OFF the main track after going West
+
+
+
+Two loaded trains with the same priority:
+
+1. SAME DIRECTION - trains which finished loading first goes
+
+e 1 10
+e 4 3
+e 3 3
+e 2 3
+
+00:00:00.1 Train  0 is ready to go East
+00:00:00.1 Train  0 is ON the main track going East
+00:00:00.2 Train  3 is ready to go East
+00:00:00.3 Train  2 is ready to go East
+00:00:00.4 Train  1 is ready to go East
+00:00:01.1 Train  0 is OFF the main track after going East
+00:00:01.1 Train  3 is ON the main track going East
+00:00:01.4 Train  3 is OFF the main track after going East
+00:00:01.4 Train  2 is ON the main track going East
+00:00:01.7 Train  2 is OFF the main track after going East
+00:00:01.7 Train  1 is ON the main track going East
+00:00:02.0 Train  1 is OFF the main track after going East
+
+2. DIFFERENT DIRECTION - trains traveling in the opposite direction of the last train
+
+e 1 10
+W 4 2
+E 3 2
+
+00:00:00.1 Train  0 is ready to go East
+00:00:00.1 Train  0 is ON the main track going East
+00:00:00.3 Train  2 is ready to go East
+00:00:00.4 Train  1 is ready to go West
+00:00:01.1 Train  0 is OFF the main track after going East
+00:00:01.1 Train  1 is ON the main track going West
+00:00:01.3 Train  1 is OFF the main track after going West
+00:00:01.3 Train  2 is ON the main track going East
+00:00:01.5 Train  2 is OFF the main track after going East
+
+
+Check other queue if trains go back to back from same direction
+
+e 1 10
+W 2 3
+W 3 2
+e 4 1
+W 4 2
+
+00:00:00.1 Train  0 is ready to go East
+00:00:00.1 Train  0 is ON the main track going East
+00:00:00.2 Train  1 is ready to go West
+00:00:00.3 Train  2 is ready to go West
+00:00:00.4 Train  3 is ready to go East
+00:00:00.4 Train  4 is ready to go West
+00:00:01.1 Train  0 is OFF the main track after going East
+00:00:01.1 Train  1 is ON the main track going West
+00:00:01.4 Train  1 is OFF the main track after going West
+00:00:01.4 Train  2 is ON the main track going West
+00:00:01.6 Train  2 is OFF the main track after going West
+00:00:01.6 Train  3 is ON the main track going East
+00:00:01.7 Train  3 is OFF the main track after going East
+00:00:01.7 Train  4 is ON the main track going West
+00:00:01.9 Train  4 is OFF the main track after going West
+2024/11/13 18:33:33 Do you want to award mark for this test? (y/n or input a floating number between [0, 1.00]): 
+2024/11/13 18:33:37 mark received: y
+2024/11/13 18:33:37 ==== Test name: testREADME, Mark received: 1.00 ====
+
+2024/11/13 18:33:38 [testExecMTS] Testing your mts can be executed with one command line parameter, i.e., input.txt, 2.00
+2024/11/13 18:33:38 [testExecMTS] Testing self-provided input case
+2024/11/13 18:33:38 input.txt: 
+e 10 6
+W 6 7
+E 3 10
+2024/11/13 18:33:38 [COMMAND]: ./mts input.txt
+2024/11/13 18:33:41 
+2024/11/13 18:33:41 [testExecMTS] exec mts succeed and output.txt found
+2024/11/13 18:33:41 [testExecMTS] output.txt content: 
+00:00:00.3 Train  2 is ready to go East
+00:00:00.3 Train  2 is ON the main track going East
+00:00:00.6 Train  1 is ready to go West
+00:00:01.0 Train  0 is ready to go East
+00:00:01.3 Train  2 is OFF the main track after going East
+00:00:01.3 Train  1 is ON the main track going West
+00:00:02.0 Train  1 is OFF the main track after going West
+00:00:02.0 Train  0 is ON the main track going East
+00:00:02.6 Train  0 is OFF the main track after going East
+2024/11/13 18:33:41 Do you want to award mark for this test? (y/n or input a floating number between [0, 2.00]): 
+2024/11/13 18:33:46 mark received: y
+2024/11/13 18:33:46 ==== Test name: testExecMTS, Mark received: 2.00 ====
+
+2024/11/13 18:33:47 [testExecMTSMultiple] Testing your mts with five different input cases, 2 mark each, 10.00
+2024/11/13 18:33:47 
+
+[testExecMTSMultiple] Testing input case 1
+2024/11/13 18:33:47 input.txt: 
+e 10 6
+W 6 7
+E 3 10
+2024/11/13 18:33:47 [COMMAND]: ./mts ../../../tests/test1/input.txt
+2024/11/13 18:33:49 
+2024/11/13 18:33:49 [testExecMTSMultiple] exec mts succeed and output.txt found
+2024/11/13 18:33:49 [testExecMTSMultiple] output.txt content match
+2024/11/13 18:33:49 output.txt: 
+00:00:00.3 Train  2 is ready to go East
+00:00:00.3 Train  2 is ON the main track going East
+00:00:00.6 Train  1 is ready to go West
+00:00:01.0 Train  0 is ready to go East
+00:00:01.3 Train  2 is OFF the main track after going East
+00:00:01.3 Train  1 is ON the main track going West
+00:00:02.0 Train  1 is OFF the main track after going West
+00:00:02.0 Train  0 is ON the main track going East
+00:00:02.6 Train  0 is OFF the main track after going East
+2024/11/13 18:33:50 
+
+[testExecMTSMultiple] Testing input case 2
+2024/11/13 18:33:50 input.txt: 
+w 1 3
+W 2 1
+E 3 1
+2024/11/13 18:33:50 [COMMAND]: ./mts ../../../tests/test2/input.txt
+2024/11/13 18:33:51 
+2024/11/13 18:33:51 [testExecMTSMultiple] exec mts succeed and output.txt found
+2024/11/13 18:33:51 [testExecMTSMultiple] output.txt content match
+2024/11/13 18:33:51 output.txt: 
+00:00:00.1 Train  0 is ready to go West
+00:00:00.1 Train  0 is ON the main track going West
+00:00:00.2 Train  1 is ready to go West
+00:00:00.3 Train  2 is ready to go East
+00:00:00.4 Train  0 is OFF the main track after going West
+00:00:00.4 Train  2 is ON the main track going East
+00:00:00.5 Train  2 is OFF the main track after going East
+00:00:00.5 Train  1 is ON the main track going West
+00:00:00.6 Train  1 is OFF the main track after going West
+2024/11/13 18:33:52 
+
+[testExecMTSMultiple] Testing input case 3
+2024/11/13 18:33:52 input.txt: 
+w 1 3
+e 2 1
+E 3 1
+2024/11/13 18:33:52 [COMMAND]: ./mts ../../../tests/test3/input.txt
+2024/11/13 18:33:53 
+2024/11/13 18:33:53 [testExecMTSMultiple] exec mts succeed and output.txt found
+2024/11/13 18:33:53 [testExecMTSMultiple] output.txt content match
+2024/11/13 18:33:53 output.txt: 
+00:00:00.1 Train  0 is ready to go West
+00:00:00.1 Train  0 is ON the main track going West
+00:00:00.2 Train  1 is ready to go East
+00:00:00.3 Train  2 is ready to go East
+00:00:00.4 Train  0 is OFF the main track after going West
+00:00:00.4 Train  2 is ON the main track going East
+00:00:00.5 Train  2 is OFF the main track after going East
+00:00:00.5 Train  1 is ON the main track going East
+00:00:00.6 Train  1 is OFF the main track after going East
+2024/11/13 18:33:54 
+
+[testExecMTSMultiple] Testing input case 4
+2024/11/13 18:33:54 input.txt: 
+w 1 2
+W 2 2
+w 4 3
+W 6 1
+e 7 1
+
+2024/11/13 18:33:54 [COMMAND]: ./mts ../../../tests/test4/input.txt
+2024/11/13 18:33:55 
+2024/11/13 18:33:55 [testExecMTSMultiple] exec mts succeed and output.txt found
+2024/11/13 18:33:55 [testExecMTSMultiple] output.txt content not match
+2024/11/13 18:33:55 Expected output: 
+00:00:00.1 Train  0 is ready to go West
+00:00:00.1 Train  0 is ON the main track going West
+00:00:00.2 Train  1 is ready to go West
+00:00:00.3 Train  0 is OFF the main track after going West
+00:00:00.3 Train  1 is ON the main track going West
+00:00:00.4 Train  2 is ready to go West
+00:00:00.5 Train  1 is OFF the main track after going West
+00:00:00.5 Train  2 is ON the main track going West
+00:00:00.6 Train  3 is ready to go West
+00:00:00.7 Train  4 is ready to go East
+00:00:00.8 Train  2 is OFF the main track after going West
+00:00:00.8 Train  4 is ON the main track going East
+00:00:00.9 Train  4 is OFF the main track after going East
+00:00:00.9 Train  3 is ON the main track going West
+00:00:01.0 Train  3 is OFF the main track after going West
+
+2024/11/13 18:33:55 Actual output: 
+00:00:00.1 Train  0 is ready to go West
+00:00:00.1 Train  0 is ON the main track going West
+00:00:00.2 Train  1 is ready to go West
+00:00:00.3 Train  0 is OFF the main track after going West
+00:00:00.3 Train  1 is ON the main track going West
+00:00:00.4 Train  2 is ready to go West
+00:00:00.5 Train  1 is OFF the main track after going West
+00:00:00.5 Train  2 is ON the main track going West
+00:00:00.6 Train  3 is ready to go West
+00:00:00.7 Train  4 is ready to go East
+00:00:00.8 Train  2 is OFF the main track after going West
+00:00:00.8 Train  3 is ON the main track going West
+00:00:00.9 Train  3 is OFF the main track after going West
+00:00:00.9 Train  4 is ON the main track going East
+00:00:01.0 Train  4 is OFF the main track after going East
+2024/11/13 18:33:55 Do you want to award mark for this test? (y/n or input a floating number between [0, 2.00]): 
+2024/11/13 18:33:59 mark received: 1
+2024/11/13 18:34:00 
+
+[testExecMTSMultiple] Testing input case 5
+2024/11/13 18:34:00 input.txt: 
+e 1 1
+E 3 2
+w 6 2
+W 9 4
+e 14 1
+E 16 1
+w 17 1
+W 19 1
+e 21 1
+e 23 5
+w 29 1
+w 30 1
+e 32 1
+e 34 1
+w 36 1
+w 38 1
+e 43 1
+e 45 2
+w 48 5
+W 54 1
+W 56 13
+e 51 12
+2024/11/13 18:34:00 [COMMAND]: ./mts ../../../tests/test5/input.txt
+2024/11/13 18:34:08 
+2024/11/13 18:34:08 [testExecMTSMultiple] exec mts succeed and output.txt found
+2024/11/13 18:34:08 [testExecMTSMultiple] output.txt content match
+2024/11/13 18:34:08 output.txt: 
+00:00:00.1 Train  0 is ready to go East
+00:00:00.1 Train  0 is ON the main track going East
+00:00:00.2 Train  0 is OFF the main track after going East
+00:00:00.3 Train  1 is ready to go East
+00:00:00.3 Train  1 is ON the main track going East
+00:00:00.5 Train  1 is OFF the main track after going East
+00:00:00.6 Train  2 is ready to go West
+00:00:00.6 Train  2 is ON the main track going West
+00:00:00.8 Train  2 is OFF the main track after going West
+00:00:00.9 Train  3 is ready to go West
+00:00:00.9 Train  3 is ON the main track going West
+00:00:01.3 Train  3 is OFF the main track after going West
+00:00:01.4 Train  4 is ready to go East
+00:00:01.4 Train  4 is ON the main track going East
+00:00:01.5 Train  4 is OFF the main track after going East
+00:00:01.6 Train  5 is ready to go East
+00:00:01.6 Train  5 is ON the main track going East
+00:00:01.7 Train  6 is ready to go West
+00:00:01.7 Train  5 is OFF the main track after going East
+00:00:01.7 Train  6 is ON the main track going West
+00:00:01.8 Train  6 is OFF the main track after going West
+00:00:01.9 Train  7 is ready to go West
+00:00:01.9 Train  7 is ON the main track going West
+00:00:02.0 Train  7 is OFF the main track after going West
+00:00:02.1 Train  8 is ready to go East
+00:00:02.1 Train  8 is ON the main track going East
+00:00:02.2 Train  8 is OFF the main track after going East
+00:00:02.3 Train  9 is ready to go East
+00:00:02.3 Train  9 is ON the main track going East
+00:00:02.8 Train  9 is OFF the main track after going East
+00:00:02.9 Train 10 is ready to go West
+00:00:02.9 Train 10 is ON the main track going West
+00:00:03.0 Train 11 is ready to go West
+00:00:03.0 Train 10 is OFF the main track after going West
+00:00:03.0 Train 11 is ON the main track going West
+00:00:03.1 Train 11 is OFF the main track after going West
+00:00:03.2 Train 12 is ready to go East
+00:00:03.2 Train 12 is ON the main track going East
+00:00:03.3 Train 12 is OFF the main track after going East
+00:00:03.4 Train 13 is ready to go East
+00:00:03.4 Train 13 is ON the main track going East
+00:00:03.5 Train 13 is OFF the main track after going East
+00:00:03.6 Train 14 is ready to go West
+00:00:03.6 Train 14 is ON the main track going West
+00:00:03.7 Train 14 is OFF the main track after going West
+00:00:03.8 Train 15 is ready to go West
+00:00:03.8 Train 15 is ON the main track going West
+00:00:03.9 Train 15 is OFF the main track after going West
+00:00:04.3 Train 16 is ready to go East
+00:00:04.3 Train 16 is ON the main track going East
+00:00:04.4 Train 16 is OFF the main track after going East
+00:00:04.5 Train 17 is ready to go East
+00:00:04.5 Train 17 is ON the main track going East
+00:00:04.7 Train 17 is OFF the main track after going East
+00:00:04.8 Train 18 is ready to go West
+00:00:04.8 Train 18 is ON the main track going West
+00:00:05.1 Train 21 is ready to go East
+00:00:05.3 Train 18 is OFF the main track after going West
+00:00:05.3 Train 21 is ON the main track going East
+00:00:05.4 Train 19 is ready to go West
+00:00:05.6 Train 20 is ready to go West
+00:00:06.5 Train 21 is OFF the main track after going East
+00:00:06.5 Train 19 is ON the main track going West
+00:00:06.6 Train 19 is OFF the main track after going West
+00:00:06.6 Train 20 is ON the main track going West
+00:00:07.9 Train 20 is OFF the main track after going West
+2024/11/13 18:34:09 No deadlock happened, all tests finished within 1 minute, awarding 1.0 marks
+2024/11/13 18:34:09 ==== Test name: testExecMTSMultiple, Mark received: 9.00 ====
+
+2024/11/13 18:34:10 
+==== Final Grade: 13.000000==== (+1 partial mark, final: 14.0)
